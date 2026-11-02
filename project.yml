@@ -1,0 +1,29 @@
+name: AutoClickerApp
+options:
+  bundleIdPrefix: com.autoclicker
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "15"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    ENABLE_BITCODE: NO
+    SUPPORTS_MACCATALYST: NO
+targets:
+  AutoClickerApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: AutoClicker
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UIBackgroundModes:
+          - audio          # keeps the app "alive" long enough for Split View use
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight

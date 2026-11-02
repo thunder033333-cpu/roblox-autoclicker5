@@ -74,3 +74,4 @@ jobs:
         with:
           name: AutoClickerApp-ipa
           path: AutoClickerApp.ipa
+          

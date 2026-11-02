@@ -1,0 +1,76 @@
+name: Build AutoClicker (dylib + IPA)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build AutoClicker.dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          clang \
+            -arch arm64 \
+            -isysroot "$SDK" \
+            -miphoneos-version-min=15.0 \
+            -dynamiclib \
+            -framework UIKit \
+            -framework Foundation \
+            -framework CoreGraphics \
+            -fobjc-arc \
+            -fvisibility=hidden \
+            -Wno-deprecated-declarations \
+            -o AutoClicker.dylib \
+            AutoClicker.m
+          file AutoClicker.dylib
+          lipo -info AutoClicker.dylib
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: AutoClickerApp
+        run: xcodegen generate
+
+      - name: Build AutoClickerApp
+        working-directory: AutoClickerApp
+        run: |
+          xcodebuild \
+            -project AutoClickerApp.xcodeproj \
+            -scheme AutoClickerApp \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            -derivedDataPath ../DerivedData \
+            build
+
+      - name: Package IPA
+        run: |
+          APP_PATH=$(find DerivedData -name "AutoClickerApp.app" -type d | head -1)
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/AutoClickerApp.app
+          zip -r AutoClickerApp.ipa Payload/
+          rm -rf Payload
+          ls -lh AutoClickerApp.ipa
+
+      - name: Upload dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoClicker-dylib
+          path: AutoClicker.dylib
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoClickerApp-ipa
+          path: AutoClickerApp.ipa
